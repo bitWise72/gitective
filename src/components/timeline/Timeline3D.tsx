@@ -218,7 +218,8 @@ export default function Timeline3D({
             </Text>
           ))}
 
-          <EffectComposer>
+          {/* Post-processing disabled to prevent WebGL context loss */}
+          {/* <EffectComposer>
             <Bloom
               luminanceThreshold={0.2}
               luminanceSmoothing={0.9}
@@ -226,7 +227,7 @@ export default function Timeline3D({
               radius={0.8}
             />
             <Vignette offset={0.3} darkness={0.5} />
-          </EffectComposer>
+          </EffectComposer> */}
         </Suspense>
       </Canvas>
     </div>

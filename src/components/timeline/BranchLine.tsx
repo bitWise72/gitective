@@ -10,10 +10,10 @@ interface BranchLineProps {
 
 export default function BranchLine({ line }: BranchLineProps) {
   const progressRef = useRef(0);
-  
+
   // Create points for the line
   const points = useMemo(() => {
-    if (line.points.length < 2) {
+    if (!line || !line.points || line.points.length < 2) {
       // Create a short horizontal line if only one point
       const point = line.points[0] || [0, 0, 0];
       return [
@@ -23,7 +23,7 @@ export default function BranchLine({ line }: BranchLineProps) {
     }
     return line.points;
   }, [line.points]);
-  
+
   return (
     <group>
       {/* Main line using drei's Line component */}
@@ -34,7 +34,7 @@ export default function BranchLine({ line }: BranchLineProps) {
         opacity={0.8}
         transparent
       />
-      
+
       {/* Glow effect line */}
       <Line
         points={points}
@@ -43,7 +43,7 @@ export default function BranchLine({ line }: BranchLineProps) {
         opacity={0.2}
         transparent
       />
-      
+
       {/* Connection points */}
       {line.points.map((point, index) => (
         <mesh key={index} position={point}>
