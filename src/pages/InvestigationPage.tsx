@@ -1,14 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Play, Upload, GitBranch, Plus, Eye, EyeOff } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Play, Upload, GitBranch, Plus, Eye, EyeOff, GitCompare } from 'lucide-react';
 import { useInvestigation } from '@/hooks/useInvestigation';
-import { Evidence, Hypothesis } from '@/types/timeline';
+import { Evidence, Hypothesis, Branch } from '@/types/timeline';
 import Timeline3D from '@/components/timeline/Timeline3D';
+import TimeSlider from '@/components/timeline/TimeSlider';
 import EvidencePanel from '@/components/evidence/EvidencePanel';
 import BranchTabs from '@/components/branches/BranchTabs';
 import HypothesisPanel from '@/components/hypotheses/HypothesisPanel';
 import InvestigationStatus from '@/components/investigation/InvestigationStatus';
+import DiffView from '@/components/investigation/DiffView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,6 +51,10 @@ export default function InvestigationPage() {
   const [evidenceContent, setEvidenceContent] = useState('');
   const [evidenceType, setEvidenceType] = useState<'text' | 'image' | 'link'>('text');
   const [evidenceUrl, setEvidenceUrl] = useState('');
+
+  const [timelineDate, setTimelineDate] = useState<Date>(new Date());
+  const [showDiffView, setShowDiffView] = useState(false);
+  const [compareBranchId, setCompareBranchId] = useState<string | null>(null);
 
   if (branches.length > 0 && !activeBranchId) {
     setActiveBranchId(branches[0].id);
@@ -230,7 +236,7 @@ export default function InvestigationPage() {
           activeBranchId={activeBranchId}
           onSelectBranch={setActiveBranchId}
           onCreateBranch={() => setNewBranchOpen(true)}
-          onMergeBranches={() => { }}
+          onMergeBranches={() => setShowDiffView(true)}
         />
       </header>
 
@@ -240,13 +246,18 @@ export default function InvestigationPage() {
           {/* Left panel: 3D Timeline or Evidence List */}
           <ResizablePanel defaultSize={65} minSize={40}>
             {showTimeline ? (
-              <div className="h-full">
+              <div className="h-full relative">
                 <Timeline3D
-                  evidence={branchEvidence}
+                  evidence={branchEvidence.filter(e => new Date(e.created_at) <= timelineDate)}
                   branches={branches}
                   selectedEvidenceId={selectedEvidence?.id || null}
                   onSelectEvidence={handleSelectEvidence}
                   onHoverEvidence={handleHoverEvidence}
+                />
+                <TimeSlider
+                  evidence={branchEvidence}
+                  currentTime={timelineDate}
+                  onTimeChange={setTimelineDate}
                 />
               </div>
             ) : (
@@ -266,8 +277,8 @@ export default function InvestigationPage() {
                         transition={{ delay: i * 0.03 }}
                         onClick={() => setSelectedEvidence(e)}
                         className={`w-full text-left p-3 rounded-lg border transition-all ${selectedEvidence?.id === e.id
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:border-primary/50'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
                           }`}
                       >
                         <div className="font-medium text-foreground truncate">{e.title}</div>
@@ -349,6 +360,18 @@ export default function InvestigationPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AnimatePresence>
+        {showDiffView && branches.length >= 2 && (
+          <DiffView
+            branchA={branches.find(b => b.id === activeBranchId) || branches[0]}
+            branchB={branches.find(b => b.id !== activeBranchId) || branches[1]}
+            evidenceA={evidence.filter(e => e.branch_id === (activeBranchId || branches[0]?.id))}
+            evidenceB={evidence.filter(e => e.branch_id !== activeBranchId && branches.some(b => b.id !== activeBranchId && e.branch_id === b.id))}
+            onClose={() => setShowDiffView(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

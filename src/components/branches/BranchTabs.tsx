@@ -29,7 +29,7 @@ export default function BranchTabs({
   return (
     <div className="flex items-center gap-2 p-2 border-b border-border bg-card/50 backdrop-blur-sm">
       <GitBranch className="w-4 h-4 text-muted-foreground ml-2" />
-      
+
       <Tabs value={activeBranchId || undefined} className="flex-1">
         <TabsList className="bg-secondary/50 h-auto p-1 gap-1">
           {branches.map(branch => (
@@ -44,9 +44,16 @@ export default function BranchTabs({
                 className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: branch.color }}
               />
-              
-              <span className="max-w-[100px] truncate">{branch.name}</span>
-              
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="max-w-[120px] truncate">{branch.name}</span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>{branch.name}</p>
+                </TooltipContent>
+              </Tooltip>
+
               {/* Confidence score */}
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -59,7 +66,7 @@ export default function BranchTabs({
                   <p>Confidence: {branch.confidence_score.toFixed(1)}%</p>
                 </TooltipContent>
               </Tooltip>
-              
+
               {/* Main branch indicator */}
               {branch.is_main && (
                 <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-primary" />
@@ -68,7 +75,7 @@ export default function BranchTabs({
           ))}
         </TabsList>
       </Tabs>
-      
+
       {/* Actions */}
       <div className="flex items-center gap-1">
         <Tooltip>
@@ -79,7 +86,7 @@ export default function BranchTabs({
           </TooltipTrigger>
           <TooltipContent>Create new narrative branch</TooltipContent>
         </Tooltip>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -100,7 +107,7 @@ export default function BranchTabs({
 // Confidence bar component for use elsewhere
 export function ConfidenceBar({ score, color }: { score: number; color: string }) {
   const level = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
-  
+
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
@@ -108,11 +115,10 @@ export function ConfidenceBar({ score, color }: { score: number; color: string }
           initial={{ width: 0 }}
           animate={{ width: `${score}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className={`h-full rounded-full ${
-            level === 'high' ? 'confidence-high' :
-            level === 'medium' ? 'confidence-medium' :
-            'confidence-low'
-          }`}
+          className={`h-full rounded-full ${level === 'high' ? 'confidence-high' :
+              level === 'medium' ? 'confidence-medium' :
+                'confidence-low'
+            }`}
           style={{ backgroundColor: color }}
         />
       </div>

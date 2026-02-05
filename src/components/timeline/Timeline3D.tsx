@@ -1,11 +1,13 @@
 import { Suspense, useRef, useState, useCallback } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Grid, Stars, Text, Html } from '@react-three/drei';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import { motion } from 'framer-motion-3d';
 import * as THREE from 'three';
 import { Evidence, Branch, getCredibilityColor, Node3D, Line3D } from '@/types/timeline';
 import EvidenceNode from './EvidenceNode';
 import BranchLine from './BranchLine';
+
 
 interface Timeline3DProps {
   evidence: Evidence[];
@@ -18,15 +20,15 @@ interface Timeline3DProps {
 // Convert evidence to 3D nodes
 function evidenceToNodes(evidence: Evidence[], branches: Branch[]): Node3D[] {
   const branchMap = new Map(branches.map(b => [b.id, b]));
-  
+
   return evidence.map((e, index) => {
     const branch = branchMap.get(e.branch_id);
     const branchIndex = branches.findIndex(b => b.id === e.branch_id);
-    
+
     // Calculate position based on creation time and branch
     const timeOffset = index * 2; // Spread along X axis
     const branchOffset = branchIndex * 4; // Spread branches along Z axis
-    
+
     return {
       id: e.id,
       position: [
@@ -47,7 +49,7 @@ function branchesToLines(evidence: Evidence[], branches: Branch[]): Line3D[] {
     const branchEvidence = evidence
       .filter(e => e.branch_id === branch.id)
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    
+
     if (branchEvidence.length === 0) {
       return {
         id: branch.id,
@@ -56,13 +58,13 @@ function branchesToLines(evidence: Evidence[], branches: Branch[]): Line3D[] {
         branchId: branch.id,
       };
     }
-    
+
     const points: [number, number, number][] = branchEvidence.map((e, index) => [
       e.position_x || index * 2,
       e.position_y || 0,
       branch.position_z || 0
     ]);
-    
+
     return {
       id: branch.id,
       points,
@@ -88,14 +90,14 @@ function SceneSetup() {
 function CameraController({ targetPosition }: { targetPosition?: [number, number, number] }) {
   const { camera } = useThree();
   const targetRef = useRef(new THREE.Vector3(0, 0, 0));
-  
+
   useFrame(() => {
     if (targetPosition) {
       targetRef.current.lerp(new THREE.Vector3(...targetPosition), 0.05);
       camera.lookAt(targetRef.current);
     }
   });
-  
+
   return null;
 }
 
@@ -134,17 +136,17 @@ export default function Timeline3D({
   onHoverEvidence,
 }: Timeline3DProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  
+
   const nodes = evidenceToNodes(evidence, branches);
   const lines = branchesToLines(evidence, branches);
-  
+
   const handleHover = useCallback((evidence: Evidence | null) => {
     setHoveredId(evidence?.id || null);
     onHoverEvidence(evidence);
   }, [onHoverEvidence]);
-  
+
   const selectedNode = nodes.find(n => n.id === selectedEvidenceId);
-  
+
   return (
     <div className="w-full h-full canvas-container rounded-lg overflow-hidden">
       <Canvas shadows>
@@ -159,10 +161,10 @@ export default function Timeline3D({
             autoRotate={evidence.length === 0}
             autoRotateSpeed={0.5}
           />
-          
+
           <SceneSetup />
           <CameraController targetPosition={selectedNode?.position} />
-          
+
           {/* Grid floor */}
           <Grid
             position={[0, -2, 0]}
@@ -178,12 +180,12 @@ export default function Timeline3D({
             followCamera={false}
             infiniteGrid={true}
           />
-          
+
           {/* Branch lines */}
           {lines.map(line => (
             <BranchLine key={line.id} line={line} />
           ))}
-          
+
           {/* Evidence nodes */}
           {nodes.length > 0 ? (
             nodes.map(node => (
@@ -199,7 +201,7 @@ export default function Timeline3D({
           ) : (
             <EmptyState />
           )}
-          
+
           {/* Branch labels */}
           {branches.map((branch, index) => (
             <Text
@@ -213,6 +215,16 @@ export default function Timeline3D({
               {branch.name}
             </Text>
           ))}
+
+          <EffectComposer>
+            <Bloom
+              luminanceThreshold={0.2}
+              luminanceSmoothing={0.9}
+              intensity={1.5}
+              radius={0.8}
+            />
+            <Vignette offset={0.3} darkness={0.5} />
+          </EffectComposer>
         </Suspense>
       </Canvas>
     </div>

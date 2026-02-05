@@ -23,15 +23,15 @@ export default function EvidenceNode({
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
   const [hoverLocal, setHoverLocal] = useState(false);
-  
+
   const credibilityLevel = getCredibilityLevel(node.data.source_credibility);
-  
+
   // Animate rotation and pulse
   useFrame((state) => {
     if (meshRef.current) {
       // Gentle rotation
       meshRef.current.rotation.y += 0.005;
-      
+
       // Pulse effect when selected or hovered
       if (isSelected || isHovered || hoverLocal) {
         const pulse = Math.sin(state.clock.elapsedTime * 3) * 0.1;
@@ -40,7 +40,7 @@ export default function EvidenceNode({
         meshRef.current.scale.setScalar(node.scale);
       }
     }
-    
+
     // Glow effect
     if (glowRef.current) {
       const glowIntensity = isSelected || isHovered || hoverLocal ? 0.6 : 0.3;
@@ -49,19 +49,19 @@ export default function EvidenceNode({
       (glowRef.current.material as THREE.MeshBasicMaterial).opacity = glowIntensity + pulse * 0.2;
     }
   });
-  
+
   const handlePointerOver = () => {
     setHoverLocal(true);
     onHover(node.data);
     document.body.style.cursor = 'pointer';
   };
-  
+
   const handlePointerOut = () => {
     setHoverLocal(false);
     onHover(null);
     document.body.style.cursor = 'auto';
   };
-  
+
   return (
     <group position={node.position}>
       {/* Outer glow */}
@@ -74,7 +74,7 @@ export default function EvidenceNode({
           blending={THREE.AdditiveBlending}
         />
       </mesh>
-      
+
       {/* Main sphere */}
       <mesh
         ref={meshRef}
@@ -86,12 +86,12 @@ export default function EvidenceNode({
         <meshStandardMaterial
           color={node.color}
           emissive={node.color}
-          emissiveIntensity={isSelected || isHovered ? 0.5 : 0.2}
-          metalness={0.8}
-          roughness={0.2}
+          emissiveIntensity={isSelected || isHovered ? 0.9 : 0.5}
+          metalness={0.9}
+          roughness={0.1}
         />
       </mesh>
-      
+
       {/* Selection ring */}
       {isSelected && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
@@ -104,7 +104,7 @@ export default function EvidenceNode({
           />
         </mesh>
       )}
-      
+
       {/* Evidence type indicator */}
       {node.data.evidence_type === 'image' && (
         <mesh position={[0, node.scale * 1.5, 0]}>
@@ -112,7 +112,7 @@ export default function EvidenceNode({
           <meshStandardMaterial color="#06b6d4" emissive="#06b6d4" emissiveIntensity={0.5} />
         </mesh>
       )}
-      
+
       {/* Hover tooltip */}
       {(hoverLocal || isHovered) && (
         <Html
@@ -124,11 +124,10 @@ export default function EvidenceNode({
           <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-3 py-2 min-w-[200px] max-w-[300px] shadow-xl">
             <h4 className="font-semibold text-foreground text-sm truncate">{node.data.title}</h4>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                credibilityLevel === 'high' ? 'bg-credibility-high/20 text-credibility-high' :
-                credibilityLevel === 'medium' ? 'bg-credibility-medium/20 text-credibility-medium' :
-                'bg-credibility-low/20 text-credibility-low'
-              }`}>
+              <span className={`text-xs px-1.5 py-0.5 rounded ${credibilityLevel === 'high' ? 'bg-credibility-high/20 text-credibility-high' :
+                  credibilityLevel === 'medium' ? 'bg-credibility-medium/20 text-credibility-medium' :
+                    'bg-credibility-low/20 text-credibility-low'
+                }`}>
                 {node.data.source_credibility}% credible
               </span>
               <span className="text-xs text-muted-foreground capitalize">{node.data.evidence_type}</span>
