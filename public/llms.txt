@@ -1,0 +1,86 @@
+# Pixel Perfect Replica
+
+> AI-Powered Visual Analysis Platform for investigating events through evidence collection, hypothesis testing, and narrative branching using Google Gemini API
+
+## Overview
+
+Pixel Perfect Replica is a sophisticated web application that combines AI-powered visual analysis with interactive 3D timeline visualization to help users investigate complex events. The platform enables users to:
+
+- Create and manage investigations with multiple narrative branches
+- Upload and analyze evidence using Google Gemini AI
+- Automatically detect objects and assess credibility
+- Generate and test hypotheses across different narrative interpretations
+- Visualize evidence relationships in an interactive 3D timeline
+- Collaborate in real-time with other investigators
+
+## Technology Stack
+
+### Frontend
+- React 18 with TypeScript for type-safe component development
+- Vite as the build tool and development server
+- TailwindCSS for utility-first styling
+- shadcn/ui for accessible UI components
+- Framer Motion for smooth animations
+- React Three Fiber for 3D timeline visualization
+- TanStack React Query for server state management
+- React Router for client-side routing
+
+### Backend
+- Supabase for backend-as-a-service
+- PostgreSQL database with real-time subscriptions
+- Supabase Edge Functions using Deno runtime
+- Row-level security for data protection
+
+### AI Integration
+- Google Gemini API for multimodal AI analysis
+- Object detection with bounding box visualization
+- Credibility assessment algorithms
+- Narrative relevance scoring
+- Cross-validation flagging
+
+## Core Features
+
+### Investigation Management
+Create investigations to track complex events with title, description, and status tracking through multiple phases.
+
+### Evidence Collection
+Add various types of evidence including text, images, links, and documents. Each piece of evidence is automatically analyzed by Gemini AI.
+
+### AI Analysis
+Automatic analysis of evidence includes object detection, credibility scoring, narrative relevance assessment, and cross-validation flags.
+
+### Narrative Branches
+Create multiple narrative branches to explore different interpretations of the same evidence set.
+
+### 3D Timeline Visualization
+Interactive Three.js-based timeline showing evidence nodes across different branches with timeline position visualization.
+
+### Hypothesis Testing
+Generate and test hypotheses with supporting and refuting evidence linkage.
+
+## API Endpoints
+
+### Supabase Edge Functions
+- marathon-investigator: Orchestrates multi-phase AI investigation process
+
+### Database Tables
+- events: Investigation events and status
+- branches: Narrative interpretation branches
+- evidence: Evidence items with AI analysis
+- hypotheses: Generated and user-created hypotheses
+- investigation_logs: Audit trail of investigation actions
+- merges: Branch merge operations and conflict resolution
+
+## Getting Started
+
+The application requires Node.js 18+, a Supabase account, and a Google Gemini API key. Configure environment variables for Supabase URL and publishable key, then run the development server on port 8080.
+
+## Project Structure
+
+- src/components: Reusable React components
+- src/hooks: Custom React hooks for data fetching
+- src/pages: Top-level page components
+- src/types: TypeScript type definitions
+- src/integrations: Supabase client and type definitions
+- supabase/functions: Edge Functions for backend logic
+- supabase/migrations: Database schema migrations
