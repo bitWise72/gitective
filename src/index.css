@@ -1,0 +1,232 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 4%;
+    --foreground: 210 40% 98%;
+    --card: 220 18% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 18% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 220 14% 14%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 14% 14%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 14% 18%;
+    --input: 220 14% 18%;
+    --ring: 262 83% 58%;
+    --radius: 0.75rem;
+    
+    /* Custom TimelineForge colors */
+    --forge-purple: 262 83% 58%;
+    --forge-purple-glow: 262 83% 68%;
+    --forge-cyan: 187 85% 53%;
+    --forge-green: 142 76% 45%;
+    --forge-yellow: 38 92% 50%;
+    --forge-red: 0 84% 60%;
+    --forge-orange: 25 95% 53%;
+    
+    /* Branch colors */
+    --branch-main: 262 83% 58%;
+    --branch-alt-1: 187 85% 53%;
+    --branch-alt-2: 142 76% 45%;
+    --branch-alt-3: 38 92% 50%;
+    --branch-alt-4: 0 84% 60%;
+    
+    /* Credibility colors */
+    --credibility-high: 142 76% 45%;
+    --credibility-medium: 38 92% 50%;
+    --credibility-low: 0 84% 60%;
+    
+    /* Grid and visualization */
+    --grid-color: 220 14% 12%;
+    --grid-accent: 262 83% 20%;
+    
+    /* Sidebar */
+    --sidebar-background: 220 18% 6%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 220 14% 14%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 262 83% 58%;
+  }
+
+  .dark {
+    --background: 220 20% 4%;
+    --foreground: 210 40% 98%;
+    --card: 220 18% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 18% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 220 14% 14%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 14% 14%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 14% 18%;
+    --input: 220 14% 18%;
+    --ring: 262 83% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--secondary));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Glow effects */
+.glow-primary {
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.4),
+              0 0 40px hsl(var(--primary) / 0.2);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px hsl(var(--forge-cyan) / 0.4),
+              0 0 40px hsl(var(--forge-cyan) / 0.2);
+}
+
+.glow-green {
+  box-shadow: 0 0 20px hsl(var(--forge-green) / 0.4),
+              0 0 40px hsl(var(--forge-green) / 0.2);
+}
+
+/* Grid background pattern */
+.grid-pattern {
+  background-image: 
+    linear-gradient(hsl(var(--grid-color)) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--grid-color)) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Animated gradient background */
+.gradient-bg {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--background)) 0%,
+    hsl(220 20% 6%) 50%,
+    hsl(var(--background)) 100%
+  );
+}
+
+/* Timeline node animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Branch line animation */
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw-line {
+  stroke-dasharray: 1000;
+  animation: draw-line 2s ease-out forwards;
+}
+
+/* Evidence card hover effect */
+.evidence-card {
+  transition: all 0.3s ease;
+}
+
+.evidence-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px hsl(var(--primary) / 0.2);
+}
+
+/* Status indicator pulse */
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-pulse {
+  animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+/* Confidence bar gradient */
+.confidence-high {
+  background: linear-gradient(90deg, hsl(var(--credibility-high)), hsl(142 76% 55%));
+}
+
+.confidence-medium {
+  background: linear-gradient(90deg, hsl(var(--credibility-medium)), hsl(38 92% 60%));
+}
+
+.confidence-low {
+  background: linear-gradient(90deg, hsl(var(--credibility-low)), hsl(0 84% 70%));
+}
+
+/* Canvas container */
+.canvas-container {
+  background: radial-gradient(
+    ellipse at center,
+    hsl(220 20% 8%) 0%,
+    hsl(var(--background)) 70%
+  );
+}
