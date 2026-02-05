@@ -52,7 +52,7 @@ export default function InvestigationPage() {
   const [evidenceType, setEvidenceType] = useState<'text' | 'image' | 'link'>('text');
   const [evidenceUrl, setEvidenceUrl] = useState('');
 
-  const [timelineDate, setTimelineDate] = useState<Date>(new Date());
+  const [timelineDate, setTimelineDate] = useState<Date>(new Date('2099-12-31'));
   const [showDiffView, setShowDiffView] = useState(false);
   const [compareBranchId, setCompareBranchId] = useState<string | null>(null);
 

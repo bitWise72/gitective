@@ -121,7 +121,6 @@ function EmptyState() {
       color="#8b5cf6"
       anchorX="center"
       anchorY="middle"
-      font="/fonts/Inter-Medium.woff"
     >
       Start an investigation to see the timeline
     </Text>

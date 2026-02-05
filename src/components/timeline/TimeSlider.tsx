@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Slider } from '@/components/ui/slider';
-import { Clock, Calendar } from 'lucide-react';
+import { Clock, Calendar, RotateCcw } from 'lucide-react';
 import { Evidence } from '@/types/timeline';
+import { Button } from '@/components/ui/button';
 
 interface TimeSliderProps {
     evidence: Evidence[];
@@ -23,14 +24,25 @@ export default function TimeSlider({ evidence, currentTime, onTimeChange }: Time
         };
     }, [evidence]);
 
+    // Initialize to maxDate on first load to show all evidence
+    useEffect(() => {
+        if (evidence.length > 0 && currentTime.getTime() < minDate.getTime()) {
+            onTimeChange(maxDate);
+        }
+    }, [evidence.length, maxDate, minDate, currentTime, onTimeChange]);
+
     const range = maxDate.getTime() - minDate.getTime();
     const currentValue = range > 0
-        ? ((currentTime.getTime() - minDate.getTime()) / range) * 100
+        ? Math.min(100, Math.max(0, ((currentTime.getTime() - minDate.getTime()) / range) * 100))
         : 100;
 
     const handleSliderChange = (value: number[]) => {
         const newTime = new Date(minDate.getTime() + (value[0] / 100) * range);
         onTimeChange(newTime);
+    };
+
+    const resetToNow = () => {
+        onTimeChange(maxDate);
     };
 
     const formatDate = (date: Date) => {
@@ -57,8 +69,14 @@ export default function TimeSlider({ evidence, currentTime, onTimeChange }: Time
                         <Clock className="w-4 h-4 text-forge-purple" />
                         <span>Time Travel</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{visibleCount} / {evidence.length} evidence visible</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{visibleCount} / {evidence.length} visible</span>
+                        {visibleCount < evidence.length && (
+                            <Button variant="ghost" size="sm" onClick={resetToNow} className="h-6 px-2">
+                                <RotateCcw className="w-3 h-3 mr-1" />
+                                Reset
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -88,3 +106,4 @@ export default function TimeSlider({ evidence, currentTime, onTimeChange }: Time
         </div>
     );
 }
+
