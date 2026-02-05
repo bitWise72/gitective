@@ -12,7 +12,7 @@ interface TimeSliderProps {
 
 export default function TimeSlider({ evidence, currentTime, onTimeChange }: TimeSliderProps) {
     const { minDate, maxDate } = useMemo(() => {
-        if (evidence.length === 0) {
+        if (!evidence || evidence.length === 0) {
             const now = new Date();
             return { minDate: now, maxDate: now };
         }
@@ -55,9 +55,9 @@ export default function TimeSlider({ evidence, currentTime, onTimeChange }: Time
         });
     };
 
-    const visibleCount = evidence.filter(e => new Date(e.created_at) <= currentTime).length;
+    const visibleCount = (evidence || []).filter(e => new Date(e.created_at) <= currentTime).length;
 
-    if (evidence.length === 0) {
+    if (!evidence || evidence.length === 0) {
         return null;
     }
 

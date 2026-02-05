@@ -18,12 +18,13 @@ interface Timeline3DProps {
 }
 
 // Convert evidence to 3D nodes
-function evidenceToNodes(evidence: Evidence[], branches: Branch[]): Node3D[] {
-  const branchMap = new Map(branches.map(b => [b.id, b]));
+function evidenceToNodes(evidence: Evidence[] = [], branches: Branch[] = []): Node3D[] {
+  if (!evidence || !branches) return [];
+  const branchMap = new Map((branches || []).map(b => [b.id, b]));
 
-  return evidence.map((e, index) => {
+  return (evidence || []).map((e, index) => {
     const branch = branchMap.get(e.branch_id);
-    const branchIndex = branches.findIndex(b => b.id === e.branch_id);
+    const branchIndex = (branches || []).findIndex(b => b.id === e.branch_id);
 
     // Calculate position based on creation time and branch
     const timeOffset = index * 2; // Spread along X axis
@@ -44,9 +45,11 @@ function evidenceToNodes(evidence: Evidence[], branches: Branch[]): Node3D[] {
 }
 
 // Convert branches to 3D lines
-function branchesToLines(evidence: Evidence[], branches: Branch[]): Line3D[] {
-  return branches.map(branch => {
-    const branchEvidence = evidence
+function branchesToLines(evidence: Evidence[] = [], branches: Branch[] = []): Line3D[] {
+  if (!evidence || !branches) return [];
+
+  return (branches || []).map(branch => {
+    const branchEvidence = (evidence || [])
       .filter(e => e.branch_id === branch.id)
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
@@ -128,8 +131,8 @@ function EmptyState() {
 }
 
 export default function Timeline3D({
-  evidence,
-  branches,
+  evidence = [],
+  branches = [],
   selectedEvidenceId,
   onSelectEvidence,
   onHoverEvidence,
