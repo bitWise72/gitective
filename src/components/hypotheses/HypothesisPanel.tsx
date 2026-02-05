@@ -1,13 +1,16 @@
 import { motion } from 'framer-motion';
-import { Beaker, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight } from 'lucide-react';
+import { Beaker, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Sparkles, Loader2 } from 'lucide-react';
 import { Hypothesis } from '@/types/timeline';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 
 interface HypothesisPanelProps {
   hypotheses: Hypothesis[];
   onSelectHypothesis: (hypothesis: Hypothesis) => void;
+  onGenerateHypotheses?: () => void;
+  isGenerating?: boolean;
 }
 
 const STATUS_CONFIG = {
@@ -40,6 +43,8 @@ const STATUS_CONFIG = {
 export default function HypothesisPanel({
   hypotheses,
   onSelectHypothesis,
+  onGenerateHypotheses,
+  isGenerating = false,
 }: HypothesisPanelProps) {
   if (hypotheses.length === 0) {
     return (
@@ -50,15 +55,34 @@ export default function HypothesisPanel({
             Hypotheses
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No hypotheses generated yet. Start an investigation to generate testable predictions.
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground text-center">
+            No hypotheses generated yet.
           </p>
+          {onGenerateHypotheses && (
+            <Button
+              onClick={onGenerateHypotheses}
+              disabled={isGenerating}
+              className="w-full bg-forge-purple hover:bg-forge-purple/90"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate Hypotheses
+                </>
+              )}
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
   }
-  
+
   return (
     <Card className="bg-card/50 border-border">
       <CardHeader className="pb-3">
@@ -78,7 +102,7 @@ export default function HypothesisPanel({
             {hypotheses.map((hypothesis, index) => {
               const config = STATUS_CONFIG[hypothesis.status];
               const StatusIcon = config.icon;
-              
+
               return (
                 <motion.button
                   key={hypothesis.id}
@@ -104,9 +128,8 @@ export default function HypothesisPanel({
                           {config.label}
                         </Badge>
                         {hypothesis.confidence_impact !== 0 && (
-                          <span className={`text-xs ${
-                            hypothesis.confidence_impact > 0 ? 'text-credibility-high' : 'text-credibility-low'
-                          }`}>
+                          <span className={`text-xs ${hypothesis.confidence_impact > 0 ? 'text-credibility-high' : 'text-credibility-low'
+                            }`}>
                             {hypothesis.confidence_impact > 0 ? '+' : ''}{hypothesis.confidence_impact.toFixed(1)}%
                           </span>
                         )}

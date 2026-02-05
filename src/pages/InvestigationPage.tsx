@@ -196,23 +196,79 @@ export default function InvestigationPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Content</label>
-                    <Textarea
-                      value={evidenceContent}
-                      onChange={(e) => setEvidenceContent(e.target.value)}
-                      placeholder="Evidence details..."
-                      rows={3}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Source URL (optional)</label>
-                    <Input
-                      value={evidenceUrl}
-                      onChange={(e) => setEvidenceUrl(e.target.value)}
-                      placeholder="https://..."
-                    />
-                  </div>
+
+                  {/* Dynamic fields based on type */}
+                  {evidenceType === 'text' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Content</label>
+                      <Textarea
+                        value={evidenceContent}
+                        onChange={(e) => setEvidenceContent(e.target.value)}
+                        placeholder="Evidence details..."
+                        rows={4}
+                      />
+                    </div>
+                  )}
+
+                  {evidenceType === 'image' && (
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Image URL</label>
+                        <Input
+                          value={evidenceUrl}
+                          onChange={(e) => setEvidenceUrl(e.target.value)}
+                          placeholder="https://example.com/image.jpg"
+                        />
+                      </div>
+                      {evidenceUrl && (
+                        <div className="rounded-lg border border-border overflow-hidden">
+                          <img
+                            src={evidenceUrl}
+                            alt="Preview"
+                            className="max-h-40 w-full object-cover"
+                            onError={(e) => (e.currentTarget.style.display = 'none')}
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Caption (optional)</label>
+                        <Textarea
+                          value={evidenceContent}
+                          onChange={(e) => setEvidenceContent(e.target.value)}
+                          placeholder="Describe what this image shows..."
+                          rows={2}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {evidenceType === 'link' && (
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Link URL</label>
+                        <Input
+                          value={evidenceUrl}
+                          onChange={(e) => setEvidenceUrl(e.target.value)}
+                          placeholder="https://example.com/article"
+                        />
+                        {evidenceUrl && (
+                          <p className="text-xs text-muted-foreground">
+                            AI will automatically fetch and analyze this page
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Summary (optional)</label>
+                        <Textarea
+                          value={evidenceContent}
+                          onChange={(e) => setEvidenceContent(e.target.value)}
+                          placeholder="Key points from this source..."
+                          rows={2}
+                        />
+                      </div>
+                    </>
+                  )}
+
                   <Button onClick={handleAddEvidence} className="w-full" disabled={!evidenceTitle.trim()}>
                     Add to {branches.find(b => b.id === activeBranchId)?.name || 'branch'}
                   </Button>
