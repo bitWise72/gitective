@@ -332,6 +332,88 @@ export function useInvestigation(eventId: string | null) {
     },
   });
 
+  const deleteEvent = useMutation({
+    mutationFn: async (eventId: string) => {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      toast({
+        title: 'Investigation Deleted',
+        description: 'The investigation and all its data have been removed',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Delete Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteBranch = useMutation({
+    mutationFn: async ({ branchId, eventId }: { branchId: string; eventId: string }) => {
+      const { error: evidenceError } = await supabase
+        .from('evidence')
+        .delete()
+        .eq('branch_id', branchId);
+      if (evidenceError) throw evidenceError;
+
+      const { error: branchError } = await supabase
+        .from('branches')
+        .delete()
+        .eq('id', branchId);
+      if (branchError) throw branchError;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['branches', variables.eventId] });
+      queryClient.invalidateQueries({ queryKey: ['evidence', variables.eventId] });
+      toast({
+        title: 'Branch Deleted',
+        description: 'The branch and its evidence have been removed',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Delete Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const runMonitorScheduler = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('monitor-scheduler', {
+        body: {},
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Monitor Scheduler Triggered',
+        description: `Processing ${data?.processed || 0} active investigations`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+
+      return data;
+    } catch (error: any) {
+      console.error('Monitor Scheduler error:', error);
+      toast({
+        title: 'Scheduler Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  }, [queryClient, toast]);
+
   return {
     event,
     branches,
@@ -345,6 +427,9 @@ export function useInvestigation(eventId: string | null) {
     addEvidence,
     startInvestigation,
     mergeBranches,
+    runMonitorScheduler,
+    deleteEvent,
+    deleteBranch,
   };
 }
 

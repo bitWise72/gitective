@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
- import { GitBranch, Plus, Search, Clock, CheckCircle, AlertCircle, Loader2, Sparkles, LogOut } from 'lucide-react';
+import { GitBranch, Plus, Search, Clock, CheckCircle, AlertCircle, Loader2, Sparkles, LogOut, PlayCircle, Trash2 } from 'lucide-react';
 import { useEvents, useInvestigation } from '@/hooks/useInvestigation';
- import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Event } from '@/types/timeline';
 
@@ -23,22 +24,22 @@ const STATUS_CONFIG = {
 export default function Index() {
   const navigate = useNavigate();
   const { data: events = [], isLoading } = useEvents();
-  const { createEvent } = useInvestigation(null);
-   const { user, signOut } = useAuth();
-  
+  const { createEvent, deleteEvent, startInvestigation } = useInvestigation(null);
+  const { user, signOut } = useAuth();
+
   const [newEventOpen, setNewEventOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  
-   const handleSignOut = async () => {
-     await signOut();
-     navigate('/auth');
-   };
- 
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
   const handleCreateEvent = async () => {
     if (!title.trim()) return;
-    
+
     setIsCreating(true);
     try {
       const event = await createEvent.mutateAsync({ title, description });
@@ -52,14 +53,14 @@ export default function Index() {
       setIsCreating(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <header className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 grid-pattern opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
-        
+
         <div className="container relative py-16 md:py-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -74,18 +75,18 @@ export default function Index() {
               <Badge variant="outline" className="text-primary border-primary/30">
                 Powered by Gemini 3
               </Badge>
-               <div className="ml-auto flex items-center gap-2">
-                 <span className="text-sm text-muted-foreground">{user?.email}</span>
-                 <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                   <LogOut className="w-4 h-4" />
-                 </Button>
-               </div>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{user?.email}</span>
+                <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            
+
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
               Timeline<span className="text-primary">Forge</span>
             </h1>
-            
+
             <p className="text-xl text-muted-foreground mb-8">
               Git for Reality. Version control your investigation of contested events.
               <br />
@@ -93,7 +94,7 @@ export default function Index() {
                 Track competing narratives, analyze evidence, and discover the truth.
               </span>
             </p>
-            
+
             <Dialog open={newEventOpen} onOpenChange={setNewEventOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="glow-primary">
@@ -126,8 +127,8 @@ export default function Index() {
                       rows={4}
                     />
                   </div>
-                  <Button 
-                    onClick={handleCreateEvent} 
+                  <Button
+                    onClick={handleCreateEvent}
                     className="w-full"
                     disabled={!title.trim() || isCreating}
                   >
@@ -149,7 +150,7 @@ export default function Index() {
           </motion.div>
         </div>
       </header>
-      
+
       {/* Investigations List */}
       <main className="container py-12">
         <div className="flex items-center justify-between mb-8">
@@ -164,7 +165,7 @@ export default function Index() {
             </div>
           </div>
         </div>
-        
+
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -190,12 +191,12 @@ export default function Index() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {events.map((event, index) => (
-              <EventCard key={event.id} event={event} index={index} />
+              <EventCard key={event.id} event={event} index={index} onDelete={deleteEvent} onMonitor={startInvestigation} />
             ))}
           </div>
         )}
       </main>
-      
+
       {/* Features Section */}
       <section className="border-t border-border bg-card/50">
         <div className="container py-16">
@@ -225,11 +226,27 @@ export default function Index() {
   );
 }
 
-function EventCard({ event, index }: { event: Event; index: number }) {
+function EventCard({ event, index, onDelete, onMonitor }: { event: Event; index: number; onDelete: any; onMonitor: any }) {
   const navigate = useNavigate();
   const config = STATUS_CONFIG[event.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.idle;
   const StatusIcon = config.icon;
-  
+  const [isMonitoring, setIsMonitoring] = useState(false);
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await onDelete.mutateAsync(event.id);
+  };
+
+  const handleMonitor = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMonitoring(true);
+    try {
+      await onMonitor(event.id);
+    } finally {
+      setIsMonitoring(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -243,10 +260,47 @@ function EventCard({ event, index }: { event: Event; index: number }) {
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-lg line-clamp-1">{event.title}</CardTitle>
-            <Badge className={`${config.bg} ${config.color} shrink-0`}>
-              <StatusIcon className={`w-3 h-3 mr-1 ${event.status === 'collecting' || event.status === 'analyzing' ? 'animate-spin' : ''}`} />
-              {event.status}
-            </Badge>
+            <div className="flex items-center gap-1 shrink-0">
+              <Badge className={`${config.bg} ${config.color}`}>
+                <StatusIcon className={`w-3 h-3 mr-1 ${event.status === 'collecting' || event.status === 'analyzing' ? 'animate-spin' : ''}`} />
+                {event.status}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                onClick={handleMonitor}
+                disabled={isMonitoring || event.status === 'collecting' || event.status === 'analyzing'}
+                title="Run investigation monitoring for this event"
+              >
+                {isMonitoring ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <PlayCircle className="w-3.5 h-3.5" />
+                )}
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Investigation?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete "{event.title}" and all associated evidence, branches, and hypotheses. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
