@@ -276,41 +276,93 @@ JSON response: {"score": number, "summary": "string", "key_claims": ["claim1"]}`
     await supabase.from('events').update({ current_phase: 4 }).eq('id', eventId);
     await logProgress(4, 'Generating hypotheses');
 
-    const hypothesesPrompt = `Based on this evidence collected about "${event.title}", generate 3 testable hypotheses.
+    if (allEvidence.length === 0) {
+      await logProgress(4, 'No evidence collected, skipping hypothesis generation');
+      console.log('No evidence to generate hypotheses from');
+    } else {
+      const hypothesesPrompt = `Based on the evidence collected about "${event.title}", generate 3-5 testable hypotheses that can be verified or refuted with additional research.
 
-Evidence summaries:
-${allEvidence.map(e => `- ${e.title}: ${e.content?.substring(0, 100)}`).join('\n')}
+Event Context:
+Title: ${event.title}
+Description: ${event.description}
+
+Evidence collected (${allEvidence.length} sources):
+${allEvidence.map((e, i) => `${i + 1}. [Credibility: ${e.source_credibility}/100] ${e.title}
+   Summary: ${e.content?.substring(0, 200)}
+   Source: ${e.source_url}`).join('\n\n')}
 
 For each hypothesis, provide:
-1. A clear claim
-2. A testable prediction
-3. What evidence would confirm or refute it
+1. A clear, specific claim that can be tested
+2. A testable prediction (what we would observe if the claim is true)
+3. What additional evidence would confirm or refute it
 
-JSON response:
+Respond with JSON only:
 {
   "hypotheses": [
-    {"claim": "string", "testable_prediction": "string", "evidence_needed": "string"}
+    {
+      "claim": "Clear statement of what is being claimed",
+      "testable_prediction": "Specific prediction that can be verified",
+      "evidence_needed": "What evidence would confirm or refute this"
+    }
   ]
 }`;
 
-    const hypothesesResponse = await callGemini(hypothesesPrompt);
-    let hypothesesList: Array<{ claim: string; testable_prediction: string; evidence_needed: string }> = [];
-    try {
-      const jsonMatch = hypothesesResponse.match(/```json\n?([\s\S]*?)\n?```/) ||
-        hypothesesResponse.match(/\{[\s\S]*\}/);
-      const parsed = JSON.parse(jsonMatch?.[1] || jsonMatch?.[0] || '{}');
-      hypothesesList = parsed.hypotheses || [];
-    } catch { }
+      try {
+        const hypothesesResponse = await callGemini(hypothesesPrompt);
+        console.log('Hypothesis generation response:', hypothesesResponse.substring(0, 500));
 
-    for (const h of hypothesesList) {
-      await supabase.from('hypotheses').insert({
-        branch_id: mainBranch.id,
-        claim: h.claim,
-        testable_prediction: h.testable_prediction,
-        status: 'pending',
-        reasoning: h.evidence_needed,
-      });
-      await logProgress(4, `Generated hypothesis: ${h.claim.substring(0, 50)}...`);
+        let hypothesesList: Array<{ claim: string; testable_prediction: string; evidence_needed: string }> = [];
+        try {
+          const jsonMatch = hypothesesResponse.match(/```json\n?([\s\S]*?)\n?```/) ||
+            hypothesesResponse.match(/\{[\s\S]*\}/);
+          const parsed = JSON.parse(jsonMatch?.[1] || jsonMatch?.[0] || '{}');
+          hypothesesList = parsed.hypotheses || [];
+          console.log(`Parsed ${hypothesesList.length} hypotheses from Gemini response`);
+        } catch (parseError) {
+          console.error('Failed to parse hypotheses JSON:', parseError);
+          await logProgress(4, 'Failed to parse hypothesis JSON from Gemini');
+        }
+
+        if (hypothesesList.length === 0) {
+          console.log('No hypotheses generated, creating fallback hypothesis');
+          hypothesesList = [{
+            claim: `The evidence collected about "${event.title}" suggests multiple competing narratives.`,
+            testable_prediction: `Additional research will reveal ${analysis.narratives?.length || 'multiple'} distinct interpretations of the event.`,
+            evidence_needed: `Cross-referencing evidence from different sources and analyzing their credibility scores.`
+          }];
+        }
+
+        let createdCount = 0;
+        for (const h of hypothesesList) {
+          try {
+            const { data: hypothesis, error: hypError } = await supabase.from('hypotheses').insert({
+              branch_id: mainBranch.id,
+              claim: h.claim,
+              testable_prediction: h.testable_prediction,
+              status: 'pending',
+              reasoning: h.evidence_needed,
+            }).select();
+
+            if (hypError) {
+              console.error('Error inserting hypothesis:', hypError);
+              await logProgress(4, `Failed to insert hypothesis: ${hypError.message}`);
+            } else {
+              createdCount++;
+              console.log(`Created hypothesis: ${h.claim.substring(0, 50)}...`);
+              await logProgress(4, `Generated hypothesis: ${h.claim.substring(0, 80)}...`);
+            }
+          } catch (insertError) {
+            console.error('Exception inserting hypothesis:', insertError);
+            await logProgress(4, `Exception creating hypothesis: ${insertError.message}`);
+          }
+        }
+
+        console.log(`Successfully created ${createdCount} out of ${hypothesesList.length} hypotheses`);
+        await logProgress(4, `Created ${createdCount} hypotheses for investigation`);
+      } catch (geminiError) {
+        console.error('Error calling Gemini for hypotheses:', geminiError);
+        await logProgress(4, `Gemini API error during hypothesis generation: ${geminiError.message}`);
+      }
     }
 
     // PHASE 5: Final Analysis
