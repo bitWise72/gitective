@@ -35,6 +35,7 @@ export default function InvestigationPage() {
     createBranch,
     addEvidence,
     startInvestigation,
+    mergeBranches,
   } = useInvestigation(id || null);
 
   const [selectedEvidence, setSelectedEvidence] = useState<Evidence | null>(null);
@@ -425,6 +426,9 @@ export default function InvestigationPage() {
             evidenceA={evidence.filter(e => e.branch_id === (activeBranchId || branches[0]?.id))}
             evidenceB={evidence.filter(e => e.branch_id !== activeBranchId && branches.some(b => b.id !== activeBranchId && e.branch_id === b.id))}
             onClose={() => setShowDiffView(false)}
+            onMerge={(sourceBranchId, targetBranchId) => {
+              mergeBranches.mutate({ sourceBranchId, targetBranchId });
+            }}
           />
         )}
       </AnimatePresence>

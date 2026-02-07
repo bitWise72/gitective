@@ -270,6 +270,68 @@ export function useInvestigation(eventId: string | null) {
     };
   }, [eventId, queryClient]);
 
+  const mergeBranches = useMutation({
+    mutationFn: async ({ sourceBranchId, targetBranchId, deleteSource = false }: { sourceBranchId: string; targetBranchId: string; deleteSource?: boolean }) => {
+      if (!eventId) throw new Error('No event selected');
+
+      // Get all evidence from the source branch
+      const { data: sourceEvidence, error: fetchError } = await supabase
+        .from('evidence')
+        .select('*')
+        .eq('branch_id', sourceBranchId);
+
+      if (fetchError) throw fetchError;
+
+      // Copy evidence to target branch
+      if (sourceEvidence && sourceEvidence.length > 0) {
+        const evidenceToCopy = sourceEvidence.map(e => ({
+          event_id: e.event_id,
+          branch_id: targetBranchId,
+          title: e.title,
+          content: e.content,
+          evidence_type: e.evidence_type,
+          source_url: e.source_url,
+          source_credibility: e.source_credibility,
+          image_url: e.image_url,
+          parent_evidence_id: e.parent_evidence_id,
+          position_x: e.position_x,
+          position_y: e.position_y,
+        }));
+
+        const { error: insertError } = await supabase
+          .from('evidence')
+          .insert(evidenceToCopy);
+
+        if (insertError) throw insertError;
+      }
+
+      // Optionally delete the source branch
+      if (deleteSource) {
+        // First delete evidence from source branch
+        await supabase.from('evidence').delete().eq('branch_id', sourceBranchId);
+        // Then delete the branch itself
+        await supabase.from('branches').delete().eq('id', sourceBranchId);
+      }
+
+      return { merged: sourceEvidence?.length || 0 };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['branches', eventId] });
+      queryClient.invalidateQueries({ queryKey: ['evidence', eventId] });
+      toast({
+        title: 'Branches Merged',
+        description: `Successfully merged ${data.merged} evidence items`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Merge Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     event,
     branches,
@@ -282,6 +344,7 @@ export function useInvestigation(eventId: string | null) {
     createBranch,
     addEvidence,
     startInvestigation,
+    mergeBranches,
   };
 }
 

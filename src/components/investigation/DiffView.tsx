@@ -12,9 +12,10 @@ interface DiffViewProps {
     evidenceA: Evidence[];
     evidenceB: Evidence[];
     onClose: () => void;
+    onMerge: (sourceBranchId: string, targetBranchId: string) => void;
 }
 
-export default function DiffView({ branchA, branchB, evidenceA, evidenceB, onClose }: DiffViewProps) {
+export default function DiffView({ branchA, branchB, evidenceA, evidenceB, onClose, onMerge }: DiffViewProps) {
     const conflicts = useMemo(() => {
         const conflictList: { evidenceA: Evidence; evidenceB: Evidence; reason: string }[] = [];
 
@@ -149,12 +150,16 @@ export default function DiffView({ branchA, branchB, evidenceA, evidenceB, onClo
                         <Button variant="outline" onClick={onClose}>
                             Cancel
                         </Button>
-                        {conflicts.length === 0 && (
-                            <Button className="bg-forge-purple hover:bg-forge-purple/90">
-                                <Check className="w-4 h-4 mr-2" />
-                                Branches Compatible
-                            </Button>
-                        )}
+                        <Button
+                            className="bg-forge-purple hover:bg-forge-purple/90"
+                            onClick={() => {
+                                onMerge(branchB.id, branchA.id);
+                                onClose();
+                            }}
+                        >
+                            <Check className="w-4 h-4 mr-2" />
+                            Merge {branchB.name} into {branchA.name}
+                        </Button>
                     </div>
                 </div>
             </div>

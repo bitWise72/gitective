@@ -91,11 +91,19 @@ serve(async (req) => {
       );
     }
 
-    // Fetch existing branches
+    // Fetch existing branches and evidence for deduplication
     const { data: branches } = await supabase
       .from('branches')
       .select('*')
       .eq('event_id', eventId);
+
+    const { data: existingEvidenceData } = await supabase
+      .from('evidence')
+      .select('source_url')
+      .eq('event_id', eventId);
+
+    const existingEvidenceUrls = new Set(existingEvidenceData?.map(e => e.source_url) || []);
+    const existingBranchNames = new Set(branches?.map(b => b.name.toLowerCase()) || []);
 
     const mainBranch = branches?.find(b => b.is_main) || branches?.[0];
     if (!mainBranch) {
@@ -192,6 +200,11 @@ Respond with JSON:
       const results = await searchTavily(query);
 
       for (const result of results.slice(0, 3)) {
+        // Skip if already exists
+        if (existingEvidenceUrls.has(result.url)) {
+          console.log(`Skipping existing evidence: ${result.url}`);
+          continue;
+        }
         // Analyze credibility with Gemini
         const credPrompt = `Rate the credibility of this source (0-100) and summarize key claims.
 Source: ${result.url}
@@ -222,6 +235,7 @@ JSON response: {"score": number, "summary": "string", "key_claims": ["claim1"]}`
         }).select().single();
 
         if (evidence) {
+          existingEvidenceUrls.add(result.url);
           allEvidence.push({ ...evidence, key_claims: credibility.key_claims });
           await logProgress(2, `Added evidence: ${result.title.substring(0, 50)}...`);
         }
@@ -238,6 +252,12 @@ JSON response: {"score": number, "summary": "string", "key_claims": ["claim1"]}`
 
     for (let i = 0; i < Math.min(narratives.length, 2); i++) {
       const narrative = narratives[i];
+
+      // Skip if branch already exists (fuzzy match could be better but exact name check for now)
+      if (existingBranchNames.has(narrative.name.toLowerCase())) {
+        continue;
+      }
+
       const { data: newBranch } = await supabase.from('branches').insert({
         event_id: eventId,
         name: narrative.name,
