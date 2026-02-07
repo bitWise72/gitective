@@ -1,10 +1,16 @@
-# Pixel Perfect Replica
+# TimelineForge
 
 AI-Powered Visual Analysis Platform for investigating events through evidence collection, hypothesis testing, and narrative branching.
 
+![TimelineForge Title](display_images/Title.png)
+
+![Sample Investigations](display_images/sample_investigations.png)
+
+![Investigation Interface](display_images/instructions.png)
+
 ## Overview
 
-Pixel Perfect Replica is a visual investigation platform that leverages Google Gemini AI to analyze evidence, detect objects in images, assess credibility, and generate hypotheses across multiple narrative branches. The application provides a 3D timeline visualization and real-time collaborative investigation tools.
+TimelineForge is a visual investigation platform that leverages Google Gemini AI to analyze evidence, detect objects in images, assess credibility, and generate hypotheses across multiple narrative branches. The application provides a 3D timeline visualization and real-time collaborative investigation tools.
 
 ## Tech Stack
 
@@ -89,7 +95,7 @@ npm run build
 ## Project Structure
 
 ```
-pixel-perfect-replica/
+timelineforge/
 ├── src/
 │   ├── components/      # React components
 │   ├── hooks/           # Custom React hooks
@@ -100,6 +106,7 @@ pixel-perfect-replica/
 ├── supabase/
 │   ├── functions/       # Edge functions
 │   └── migrations/      # Database migrations
+├── display_images/      # Demo screenshots
 └── public/              # Static assets
 ```
 
